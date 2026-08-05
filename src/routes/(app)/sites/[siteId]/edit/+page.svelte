@@ -6,11 +6,18 @@
 	import { Card, CardContent, CardFooter } from '$lib/components/ui/card';
 	import { Alert } from '$lib/components/ui/alert';
 	import FormFieldError from '$lib/components/app/FormFieldError.svelte';
+	import MediaPicker from '$lib/components/app/media/MediaPicker.svelte';
 	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+	import ImagePlus from '@lucide/svelte/icons/image-plus';
+	import type { Media } from '$lib/types';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	let logoUrl = $state(form?.logoUrl ?? data.site.logoUrl ?? '');
+	let faviconUrl = $state(form?.faviconUrl ?? data.site.faviconUrl ?? '');
+	let logoPickerOpen = $state(false);
+	let faviconPickerOpen = $state(false);
 	let submitting = $state(false);
 </script>
 
@@ -57,13 +64,23 @@
 
 				<div class="space-y-1.5">
 					<Label for="logoUrl">Logo URL (opsional)</Label>
-					<Input id="logoUrl" name="logoUrl" type="url" value={form?.logoUrl ?? data.site.logoUrl ?? ''} />
+					<div class="flex gap-2">
+						<Input id="logoUrl" name="logoUrl" type="url" bind:value={logoUrl} />
+						<Button type="button" variant="outline" onclick={() => (logoPickerOpen = true)}>
+							<ImagePlus /> Pilih
+						</Button>
+					</div>
 					<FormFieldError errors={form?.errors} field="logoUrl" />
 				</div>
 
 				<div class="space-y-1.5">
 					<Label for="faviconUrl">Favicon URL (opsional)</Label>
-					<Input id="faviconUrl" name="faviconUrl" type="url" value={form?.faviconUrl ?? data.site.faviconUrl ?? ''} />
+					<div class="flex gap-2">
+						<Input id="faviconUrl" name="faviconUrl" type="url" bind:value={faviconUrl} />
+						<Button type="button" variant="outline" onclick={() => (faviconPickerOpen = true)}>
+							<ImagePlus /> Pilih
+						</Button>
+					</div>
 					<FormFieldError errors={form?.errors} field="faviconUrl" />
 				</div>
 			</CardContent>
@@ -77,3 +94,6 @@
 		</form>
 	</Card>
 </div>
+
+<MediaPicker siteId={data.site.id} bind:open={logoPickerOpen} onSelect={(media: Media) => (logoUrl = media.url)} />
+<MediaPicker siteId={data.site.id} bind:open={faviconPickerOpen} onSelect={(media: Media) => (faviconUrl = media.url)} />

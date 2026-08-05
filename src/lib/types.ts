@@ -162,3 +162,49 @@ export interface ApiErrorBody {
 	error: string;
 	statusCode: number;
 }
+
+/**
+ * Media Library entity (docs/media_guide.md §7) — backend module `src/modules/media/`.
+ * `width`/`height` are `null` for non-image files or images the backend couldn't read
+ * dimensions from (e.g. some SVGs); `objectKey`/`uploadedById` are secondary/read-only info.
+ */
+export interface Media {
+	id: string;
+	siteId: string;
+	uploadedById: string;
+	objectKey: string;
+	originalName: string;
+	mimeType: string;
+	size: number;
+	url: string;
+	altText: string | null;
+	caption: string | null;
+	width: number | null;
+	height: number | null;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface MediaListResult {
+	items: Media[];
+	page: number;
+	limit: number;
+	total: number;
+	totalPages: number;
+}
+
+export type MediaTypeFilter = 'image' | 'document';
+
+/** Mirrors backend `ALLOWED_MIME_TYPES` (media_guide.md §7, `media.constants.ts`) — validate client-side first, backend re-validates regardless. */
+export const MEDIA_ALLOWED_MIME_TYPES = [
+	'image/jpeg',
+	'image/png',
+	'image/gif',
+	'image/webp',
+	'image/svg+xml',
+	'application/pdf'
+] as const;
+
+export const MEDIA_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+export const MEDIA_ACCEPT_ATTR = MEDIA_ALLOWED_MIME_TYPES.join(',');

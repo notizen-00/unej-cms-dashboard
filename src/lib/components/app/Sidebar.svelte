@@ -6,6 +6,7 @@
 
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Globe2 from '@lucide/svelte/icons/globe-2';
+	import Image from '@lucide/svelte/icons/image';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import Newspaper from '@lucide/svelte/icons/newspaper';
@@ -124,6 +125,12 @@
 				`/sites/${activeSite.id}/pages`,
 				'Pages',
 				FileText
+			)}
+
+			{@render navLink(
+				`/sites/${activeSite.id}/media`,
+				'Media',
+				Image
 			)}
 		{/if}
 

@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '$lib/components/ui/table';
+	import { TableRow, TableCell } from '$lib/components/ui/table';
+	import DataTable from '$lib/components/app/DataTable.svelte';
 	import StatusBadge from '$lib/components/app/StatusBadge.svelte';
 	import { formatDate } from '$lib/utils';
+	import type { PageItem } from '$lib/types';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Home from '@lucide/svelte/icons/home';
 	import type { PageData } from './$types';
@@ -13,6 +15,14 @@
 		if (!parentId) return '-';
 		return data.pages.find((p) => p.id === parentId)?.title ?? '-';
 	}
+
+	const columns = [
+		{ label: 'Judul' },
+		{ label: 'Induk' },
+		{ label: 'Urutan' },
+		{ label: 'Status' },
+		{ label: 'Diperbarui' }
+	];
 </script>
 
 <svelte:head>
@@ -25,35 +35,30 @@
 		<Button href="/sites/{data.site.id}/pages/new"><Plus /> Halaman Baru</Button>
 	</div>
 
-	<Table>
-		<TableHeader>
+	<DataTable
+		items={data.pages}
+		{columns}
+		rowKey={(item) => item.id}
+		searchFn={(item, q) => item.title.toLowerCase().includes(q)}
+		searchPlaceholder="Cari judul halaman..."
+		emptyMessage="Belum ada halaman."
+	>
+		{#snippet row(item: PageItem)}
 			<TableRow>
-				<TableHead>Judul</TableHead>
-				<TableHead>Induk</TableHead>
-				<TableHead>Urutan</TableHead>
-				<TableHead>Status</TableHead>
-				<TableHead>Diperbarui</TableHead>
+				<TableCell>
+					<a
+						href="/sites/{data.site.id}/pages/{item.id}"
+						class="inline-flex items-center gap-1.5 font-medium hover:underline"
+					>
+						{#if item.isHomepage}<Home class="size-3.5 text-muted-foreground" />{/if}
+						{item.title}
+					</a>
+				</TableCell>
+				<TableCell class="text-muted-foreground">{parentTitle(item.parentId)}</TableCell>
+				<TableCell class="text-muted-foreground">{item.order}</TableCell>
+				<TableCell><StatusBadge status={item.status} /></TableCell>
+				<TableCell class="text-muted-foreground">{formatDate(item.updatedAt)}</TableCell>
 			</TableRow>
-		</TableHeader>
-		<TableBody>
-			{#each data.pages as item (item.id)}
-				<TableRow>
-					<TableCell>
-						<a href="/sites/{data.site.id}/pages/{item.id}" class="inline-flex items-center gap-1.5 font-medium hover:underline">
-							{#if item.isHomepage}<Home class="size-3.5 text-muted-foreground" />{/if}
-							{item.title}
-						</a>
-					</TableCell>
-					<TableCell class="text-muted-foreground">{parentTitle(item.parentId)}</TableCell>
-					<TableCell class="text-muted-foreground">{item.order}</TableCell>
-					<TableCell><StatusBadge status={item.status} /></TableCell>
-					<TableCell class="text-muted-foreground">{formatDate(item.updatedAt)}</TableCell>
-				</TableRow>
-			{:else}
-				<TableRow>
-					<TableCell colspan={5} class="py-8 text-center text-muted-foreground">Belum ada halaman.</TableCell>
-				</TableRow>
-			{/each}
-		</TableBody>
-	</Table>
+		{/snippet}
+	</DataTable>
 </div>

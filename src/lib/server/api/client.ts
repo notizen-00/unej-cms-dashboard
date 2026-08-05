@@ -29,14 +29,16 @@ export async function rawApiFetch(
 	{ method = 'GET', body, fetch, cookie, headers: customHeaders = {} }: RawFetchOptions
 ): Promise<Response> {
 	const headers: Record<string, string> = { ...customHeaders };
-	if (body !== undefined) headers['Content-Type'] = 'application/json';
+	const isFormData = body instanceof FormData;
+	// Let fetch set Content-Type itself for FormData bodies (it needs to add the multipart boundary).
+	if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json';
 	if (cookie) headers['Cookie'] = cookie;
 
 	try {
 		return await fetch(`${API_URL}${path}`, {
 			method,
 			headers,
-			body: body !== undefined ? JSON.stringify(body) : undefined
+			body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body)
 		});
 	} catch {
 		throw new ApiError(0, 'Tidak bisa terhubung ke server. Periksa koneksi dan coba lagi.');
@@ -100,6 +102,23 @@ export async function apiFetch<T>(
 
 	if (response.status === 204) {
 		return undefined as T;
+	}
+
+	const text = await response.text();
+	return (text ? JSON.parse(text) : undefined) as T;
+}
+
+/** Server-side `multipart/form-data` call — for the one endpoint (media upload) that isn't plain JSON. */
+export async function apiUpload<T>(event: MinimalEvent, path: string, formData: FormData): Promise<T> {
+	const response = await rawApiFetch(path, {
+		method: 'POST',
+		body: formData,
+		fetch: event.fetch,
+		cookie: sessionCookieHeader(event)
+	});
+
+	if (!response.ok) {
+		throw await toApiError(response);
 	}
 
 	const text = await response.text();

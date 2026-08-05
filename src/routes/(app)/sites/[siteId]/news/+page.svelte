@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Select } from '$lib/components/ui/select';
-	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '$lib/components/ui/table';
+	import { TableRow, TableCell } from '$lib/components/ui/table';
+	import DataTable from '$lib/components/app/DataTable.svelte';
 	import StatusBadge from '$lib/components/app/StatusBadge.svelte';
 	import { formatDate } from '$lib/utils';
-	import { MANUAL_CONTENT_STATUSES, type ContentStatus } from '$lib/types';
+	import { MANUAL_CONTENT_STATUSES, type ContentStatus, type NewsItem } from '$lib/types';
 	import Plus from '@lucide/svelte/icons/plus';
 	import type { PageData } from './$types';
 
@@ -25,6 +26,13 @@
 		archived: 'Diarsipkan',
 		trashed: 'Sampah'
 	};
+
+	const columns = [
+		{ label: 'Judul' },
+		{ label: 'Status' },
+		{ label: 'Penulis' },
+		{ label: 'Diperbarui' }
+	];
 </script>
 
 <svelte:head>
@@ -47,30 +55,23 @@
 		</Select>
 	</div>
 
-	<Table>
-		<TableHeader>
+	<DataTable
+		items={filtered}
+		{columns}
+		rowKey={(item) => item.id}
+		searchFn={(item, q) => item.title.toLowerCase().includes(q)}
+		searchPlaceholder="Cari judul berita..."
+		emptyMessage="Belum ada berita."
+	>
+		{#snippet row(item: NewsItem)}
 			<TableRow>
-				<TableHead>Judul</TableHead>
-				<TableHead>Status</TableHead>
-				<TableHead>Penulis</TableHead>
-				<TableHead>Diperbarui</TableHead>
+				<TableCell>
+					<a href="/sites/{data.site.id}/news/{item.id}" class="font-medium hover:underline">{item.title}</a>
+				</TableCell>
+				<TableCell><StatusBadge status={item.status} /></TableCell>
+				<TableCell class="text-muted-foreground">{item.authorName ?? '-'}</TableCell>
+				<TableCell class="text-muted-foreground">{formatDate(item.updatedAt)}</TableCell>
 			</TableRow>
-		</TableHeader>
-		<TableBody>
-			{#each filtered as item (item.id)}
-				<TableRow>
-					<TableCell>
-						<a href="/sites/{data.site.id}/news/{item.id}" class="font-medium hover:underline">{item.title}</a>
-					</TableCell>
-					<TableCell><StatusBadge status={item.status} /></TableCell>
-					<TableCell class="text-muted-foreground">{item.authorName ?? '-'}</TableCell>
-					<TableCell class="text-muted-foreground">{formatDate(item.updatedAt)}</TableCell>
-				</TableRow>
-			{:else}
-				<TableRow>
-					<TableCell colspan={4} class="py-8 text-center text-muted-foreground">Belum ada berita.</TableCell>
-				</TableRow>
-			{/each}
-		</TableBody>
-	</Table>
+		{/snippet}
+	</DataTable>
 </div>

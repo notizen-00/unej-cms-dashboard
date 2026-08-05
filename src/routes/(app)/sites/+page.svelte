@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '$lib/components/ui/table';
+	import { TableRow, TableCell } from '$lib/components/ui/table';
+	import DataTable from '$lib/components/app/DataTable.svelte';
 	import ConfirmDialog from '$lib/components/app/ConfirmDialog.svelte';
 	import { formatDate } from '$lib/utils';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -17,6 +18,14 @@
 		deleteTarget = site;
 		confirmOpen = true;
 	}
+
+	const columns = [
+		{ label: 'Nama' },
+		{ label: 'Slug' },
+		{ label: 'Domain' },
+		{ label: 'Dibuat' },
+		{ label: 'Aksi', class: 'text-right' }
+	];
 </script>
 
 <svelte:head>
@@ -29,41 +38,33 @@
 		<Button href="/sites/new"><Plus /> Site Baru</Button>
 	</div>
 
-	<Table>
-		<TableHeader>
+	<DataTable
+		items={data.sites}
+		{columns}
+		rowKey={(site) => site.id}
+		searchFn={(site, q) => site.name.toLowerCase().includes(q) || site.slug.toLowerCase().includes(q)}
+		searchPlaceholder="Cari nama atau slug..."
+		emptyMessage="Belum ada site."
+	>
+		{#snippet row(site: Site)}
 			<TableRow>
-				<TableHead>Nama</TableHead>
-				<TableHead>Slug</TableHead>
-				<TableHead>Domain</TableHead>
-				<TableHead>Dibuat</TableHead>
-				<TableHead class="text-right">Aksi</TableHead>
+				<TableCell>
+					<a href="/sites/{site.id}" class="font-medium hover:underline">{site.name}</a>
+				</TableCell>
+				<TableCell class="text-muted-foreground">{site.slug}</TableCell>
+				<TableCell class="text-muted-foreground">{site.domain ?? '-'}</TableCell>
+				<TableCell class="text-muted-foreground">{formatDate(site.createdAt)}</TableCell>
+				<TableCell class="text-right">
+					<div class="flex justify-end gap-2">
+						<Button href="/sites/{site.id}/edit" variant="outline" size="sm">Edit</Button>
+						<Button variant="destructive" size="icon" onclick={() => askDelete(site)} title="Hapus site">
+							<Trash2 />
+						</Button>
+					</div>
+				</TableCell>
 			</TableRow>
-		</TableHeader>
-		<TableBody>
-			{#each data.sites as site (site.id)}
-				<TableRow>
-					<TableCell>
-						<a href="/sites/{site.id}" class="font-medium hover:underline">{site.name}</a>
-					</TableCell>
-					<TableCell class="text-muted-foreground">{site.slug}</TableCell>
-					<TableCell class="text-muted-foreground">{site.domain ?? '-'}</TableCell>
-					<TableCell class="text-muted-foreground">{formatDate(site.createdAt)}</TableCell>
-					<TableCell class="text-right">
-						<div class="flex justify-end gap-2">
-							<Button href="/sites/{site.id}/edit" variant="outline" size="sm">Edit</Button>
-							<Button variant="destructive" size="icon" onclick={() => askDelete(site)} title="Hapus site">
-								<Trash2 />
-							</Button>
-						</div>
-					</TableCell>
-				</TableRow>
-			{:else}
-				<TableRow>
-					<TableCell colspan={5} class="py-8 text-center text-muted-foreground">Belum ada site.</TableCell>
-				</TableRow>
-			{/each}
-		</TableBody>
-	</Table>
+		{/snippet}
+	</DataTable>
 </div>
 
 {#if deleteTarget}
