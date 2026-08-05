@@ -1,71 +1,167 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { cn } from '$lib/utils.js';
-	import { canManageMembers, canManageSite } from '$lib/permissions';
+	import { canManageSite } from '$lib/permissions';
 	import type { AuthUser, Site } from '$lib/types';
-	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
-	import Globe from '@lucide/svelte/icons/globe';
-	import Users from '@lucide/svelte/icons/users';
-	import Newspaper from '@lucide/svelte/icons/newspaper';
-	import FileText from '@lucide/svelte/icons/file-text';
-	import UserCog from '@lucide/svelte/icons/user-cog';
-	import Settings from '@lucide/svelte/icons/settings';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import KeyRound from '@lucide/svelte/icons/key-round';
+	import { cn } from '$lib/utils.js';
 
-	let { user, activeSite }: { user: AuthUser; activeSite: Site | null } = $props();
+	import FileText from '@lucide/svelte/icons/file-text';
+	import Globe2 from '@lucide/svelte/icons/globe-2';
+	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
+	import LogOut from '@lucide/svelte/icons/log-out';
+	import Newspaper from '@lucide/svelte/icons/newspaper';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Settings from '@lucide/svelte/icons/settings';
+	import Users from '@lucide/svelte/icons/users';
+	import X from '@lucide/svelte/icons/x';
+
+	let {
+		user,
+		activeSite,
+		mobileOpen = false,
+		onClose = () => {}
+	}: {
+		user: AuthUser;
+		activeSite: Site | null;
+		mobileOpen?: boolean;
+		onClose?: () => void;
+	} = $props();
 
 	const pathname = $derived(page.url.pathname);
 
+	const createContentHref = $derived(
+		activeSite
+			? `/sites/${activeSite.id}/news/new`
+			: user.isSuperAdmin
+				? '/sites/new'
+				: '/'
+	);
+
+	const settingsHref = $derived(
+		activeSite && canManageSite(user, [activeSite], activeSite.id)
+			? `/sites/${activeSite.id}/edit`
+			: '/account/sessions'
+	);
+
 	function isActive(href: string, exact = false) {
-		return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+		return exact
+			? pathname === href
+			: pathname === href || pathname.startsWith(`${href}/`);
 	}
 </script>
 
-{#snippet navLink(href: string, label: string, Icon: typeof Globe, exact = false)}
+{#snippet navLink(
+	href: string,
+	label: string,
+	Icon: typeof LayoutDashboard,
+	exact = false
+)}
 	<a
 		{href}
+		onclick={onClose}
 		class={cn(
-			'flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+			'relative flex h-11 items-center gap-3 border-l-[3px] px-4 text-[13px] font-medium transition-colors',
 			isActive(href, exact)
-				? 'bg-primary text-primary-foreground'
-				: 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+				? 'border-[#075985] bg-[#f0f3ff] text-[#075985]'
+				: 'border-transparent text-[#47627d] hover:bg-[#f6f8fc] hover:text-[#075985]'
 		)}
 	>
-		<Icon class="size-4 shrink-0" />
+		<Icon
+			size={18}
+			strokeWidth={isActive(href, exact) ? 2.2 : 1.8}
+			class="shrink-0"
+		/>
+
 		<span class="truncate">{label}</span>
 	</a>
 {/snippet}
 
-<nav class="flex h-full w-60 shrink-0 flex-col gap-1 border-r border-border bg-card p-3">
-	<div class="mb-2 px-2 py-1.5">
-		<span class="text-sm font-semibold">Unej CMS</span>
-	</div>
+<aside
+	class={cn(
+		'fixed inset-y-0 left-0 z-50 flex w-[224px] shrink-0 flex-col border-r border-[#e1e7ef] bg-white shadow-xl transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 lg:shadow-none',
+		mobileOpen ? 'translate-x-0' : '-translate-x-full'
+	)}
+>
+	<header class="flex h-16 shrink-0 items-center border-b border-[#e5eaf1] px-4">
+		<a href="/" class="flex min-w-0 items-center gap-2.5" onclick={onClose}>
+			<div
+				class="grid h-9 w-9 shrink-0 place-items-center rounded-[2px] bg-[#075985] text-sm font-bold text-white"
+			>
+				U
+			</div>
 
-	{@render navLink('/', 'Dashboard', LayoutDashboard, true)}
+			<div class="min-w-0">
+				<p class="truncate text-[17px] font-bold leading-5 text-[#06294a]">
+					Unej CMS
+				</p>
 
-	{#if user.isSuperAdmin}
-		<p class="mt-3 px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Administrasi</p>
-		{@render navLink('/sites', 'Sites', Globe, true)}
-		{@render navLink('/users', 'Users', Users)}
-	{/if}
+				<p class="truncate text-[9px] leading-3 text-[#64748b]">
+					Admin Panel
+				</p>
+			</div>
+		</a>
 
-	{#if activeSite}
-		<p class="mt-3 px-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-			{activeSite.name}
-		</p>
-		{@render navLink(`/sites/${activeSite.id}`, 'Ringkasan Site', ShieldCheck, true)}
-		{@render navLink(`/sites/${activeSite.id}/news`, 'Berita', Newspaper)}
-		{@render navLink(`/sites/${activeSite.id}/pages`, 'Halaman', FileText)}
-		{#if canManageMembers(user)}
-			{@render navLink(`/sites/${activeSite.id}/members`, 'Anggota', UserCog)}
+		<button
+			type="button"
+			class="ml-auto grid h-8 w-8 place-items-center text-[#64748b] hover:bg-[#f1f5f9] lg:hidden"
+			aria-label="Tutup navigasi"
+			onclick={onClose}
+		>
+			<X size={18} />
+		</button>
+	</header>
+
+	<nav class="min-h-0 flex-1 overflow-y-auto py-4">
+		{@render navLink('/', 'Dashboard', LayoutDashboard, true)}
+
+		{#if activeSite}
+			{@render navLink(
+				`/sites/${activeSite.id}/news`,
+				'Konten Berita',
+				Newspaper
+			)}
+
+			{@render navLink(
+				`/sites/${activeSite.id}/pages`,
+				'Halaman Statis',
+				FileText
+			)}
 		{/if}
-		{#if canManageSite(user, [activeSite], activeSite.id)}
-			{@render navLink(`/sites/${activeSite.id}/edit`, 'Pengaturan Site', Settings)}
-		{/if}
-	{/if}
 
-	<div class="mt-auto pt-3">
-		{@render navLink('/account/sessions', 'Sesi Saya', KeyRound)}
+		{#if user.isSuperAdmin}
+			{@render navLink('/sites', 'Kelola Situs', Globe2, true)}
+			{@render navLink('/users', 'Pengguna', Users)}
+		{/if}
+	</nav>
+
+	<div class="shrink-0 border-t border-[#e5eaf1] px-3 py-4">
+		<a
+			href={createContentHref}
+			onclick={onClose}
+			class="mb-4 flex h-9 w-full items-center justify-center gap-2 border border-[#075985] bg-white px-3 text-[11px] font-medium text-[#075985] transition-colors hover:bg-[#075985] hover:text-white"
+		>
+			<Plus size={15} strokeWidth={2} />
+			<span>
+				{activeSite ? 'Buat Konten Baru' : 'Buat Situs Baru'}
+			</span>
+		</a>
+
+		<a
+			href={settingsHref}
+			onclick={onClose}
+			class="flex h-9 items-center gap-3 px-3 text-[12px] font-medium text-[#47627d] transition-colors hover:bg-[#f6f8fc] hover:text-[#075985]"
+		>
+			<Settings size={17} strokeWidth={1.8} />
+			<span>Pengaturan</span>
+		</a>
+
+		<form method="POST" action="/logout">
+			<button
+				type="submit"
+				class="flex h-9 w-full items-center gap-3 px-3 text-left text-[12px] font-medium text-[#47627d] transition-colors hover:bg-red-50 hover:text-red-600"
+			>
+				<LogOut size={17} strokeWidth={1.8} />
+				<span>Keluar</span>
+			</button>
+		</form>
 	</div>
-</nav>
+</aside>

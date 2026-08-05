@@ -1,39 +1,80 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Button } from '$lib/components/ui/button';
 	import type { Site } from '$lib/types';
-	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
-	import Check from '@lucide/svelte/icons/check';
 
-	let { sites, activeSite }: { sites: Site[]; activeSite: Site | null } = $props();
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Search from '@lucide/svelte/icons/search';
+
+	let {
+		sites,
+		activeSite
+	}: {
+		sites: Site[];
+		activeSite: Site | null;
+	} = $props();
 </script>
 
-{#if sites.length > 1}
-	<DropdownMenu.Root>
-		<DropdownMenu.Trigger>
-			{#snippet child({ props })}
-				<Button variant="outline" size="sm" class="gap-1.5" {...props}>
-					<span class="max-w-40 truncate">{activeSite?.name ?? 'Pilih site'}</span>
-					<ChevronsUpDown class="size-3.5 text-muted-foreground" />
-				</Button>
-			{/snippet}
-		</DropdownMenu.Trigger>
-		<DropdownMenu.Content>
-			<DropdownMenu.Group>
-				<DropdownMenu.Label>Beralih site</DropdownMenu.Label>
+<DropdownMenu.Root>
+	<DropdownMenu.Trigger>
+		{#snippet child({ props })}
+			<button
+				type="button"
+				class="flex h-9 w-[164px] items-center gap-2 border border-[#dce3ec] bg-[#fbfcff] px-3 text-left text-[11px] text-[#64748b] transition-colors hover:border-[#94a3b8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]/30 sm:w-[200px]"
+				{...props}
+			>
+				<Search
+					size={15}
+					strokeWidth={1.8}
+					class="shrink-0 text-[#64748b]"
+				/>
+
+				<span class="min-w-0 flex-1 truncate">
+					{activeSite?.name ?? 'Pilih Situs'}
+				</span>
+
+				<ChevronDown size={14} class="shrink-0" />
+			</button>
+		{/snippet}
+	</DropdownMenu.Trigger>
+
+	<DropdownMenu.Content class="w-[240px]">
+		<DropdownMenu.Group>
+			<DropdownMenu.Label>Pilih situs</DropdownMenu.Label>
+
+			{#if sites.length === 0}
+				<div class="px-2 py-3 text-xs text-muted-foreground">
+					Belum ada situs tersedia.
+				</div>
+			{:else}
 				{#each sites as site (site.id)}
-					<a
-						href="/switch-site/{site.id}?back={encodeURIComponent(page.url.pathname)}"
-						class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-					>
-						<Check class={`size-3.5 ${site.id === activeSite?.id ? 'opacity-100' : 'opacity-0'}`} />
-						<span class="truncate">{site.name}</span>
-					</a>
+					<DropdownMenu.Item>
+						{#snippet child({ props })}
+							<a
+								href={`/switch-site/${site.id}?back=${encodeURIComponent(page.url.pathname)}`}
+								class="flex w-full items-center gap-2"
+								{...props}
+							>
+								<Check
+									size={14}
+									class={site.id === activeSite?.id
+										? 'opacity-100'
+										: 'opacity-0'}
+								/>
+
+								<div class="min-w-0">
+									<p class="truncate text-sm">{site.name}</p>
+
+									<p class="truncate text-[10px] text-muted-foreground">
+										{site.domain ?? site.slug}
+									</p>
+								</div>
+							</a>
+						{/snippet}
+					</DropdownMenu.Item>
 				{/each}
-			</DropdownMenu.Group>
-		</DropdownMenu.Content>
-	</DropdownMenu.Root>
-{:else if activeSite}
-	<span class="text-sm font-medium text-muted-foreground">{activeSite.name}</span>
-{/if}
+			{/if}
+		</DropdownMenu.Group>
+	</DropdownMenu.Content>
+</DropdownMenu.Root>
