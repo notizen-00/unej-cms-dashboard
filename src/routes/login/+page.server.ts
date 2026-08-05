@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { login } from '$lib/server/api/auth';
 import { ApiError } from '$lib/server/api/client';
+import { safeLocalRedirect } from '$lib/server/redirect';
 
 export const load: PageServerLoad = async ({ url }) => {
 	return {
@@ -27,14 +28,14 @@ export const actions: Actions = {
 			await login(event, email, password);
 		} catch (err) {
 			if (err instanceof ApiError) {
-				return fail(err.status === 0 ? 503 : 401, {
+				return fail(err.status === 0 ? 503 : err.status, {
 					email,
-					message: err.status === 429 ? err.message : 'Email atau password salah.'
+					message: err.message
 				});
 			}
 			throw err;
 		}
 
-		redirect(303, redirectTo.startsWith('/') ? redirectTo : '/');
+		redirect(303, safeLocalRedirect(redirectTo));
 	}
 };

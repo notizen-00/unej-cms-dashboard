@@ -2,8 +2,27 @@
  * DTOs hand-maintained against the real `unej-cms` backend (`d:\nest-js\unej-cms`) —
  * there is no OpenAPI/Swagger spec (PRD gap #5), so these were verified directly
  * against the NestJS controllers/Zod DTOs/Drizzle schema rather than guessed from
- * PRD prose alone. Keep this in sync if the backend DTOs change.
+ * PRD prose alone. The setup DTO below follows the nested admin/site transaction
+ * described by the admin PRD because the attached source does not include the backend
+ * DTO file. Reconcile it if the backend uses different property names.
  */
+
+export interface SetupStatus {
+	needsSetup: boolean;
+}
+
+export interface SetupInitInput {
+	admin: {
+		name: string;
+		email: string;
+		password: string;
+	};
+	site: {
+		name: string;
+		slug: string;
+		domain?: string;
+	};
+}
 
 export type SiteRole = 'site_admin' | 'editor' | 'reviewer' | 'author';
 

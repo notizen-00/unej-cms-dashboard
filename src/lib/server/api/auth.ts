@@ -27,6 +27,35 @@ function parseSetCookie(header: string, name: string): { value: string; maxAge?:
 	return { value: nameValue.slice(eqIdx + 1), maxAge };
 }
 
+export function mirrorSessionCookie(
+	event: MinimalEvent,
+	response: Response,
+	missingCookieMessage = 'Login berhasil tapi sesi tidak diterima dari server.'
+): void {
+	const setCookieHeaders =
+		typeof response.headers.getSetCookie === 'function'
+			? response.headers.getSetCookie()
+			: response.headers.get('set-cookie')
+				? [response.headers.get('set-cookie') as string]
+				: [];
+
+	const sessionCookie = setCookieHeaders
+		.map((header) => parseSetCookie(header, SESSION_COOKIE_NAME))
+		.find((parsed): parsed is { value: string; maxAge?: number } => parsed !== null);
+
+	if (!sessionCookie) {
+		throw new ApiError(500, missingCookieMessage);
+	}
+
+	event.cookies.set(SESSION_COOKIE_NAME, sessionCookie.value, {
+		path: '/',
+		httpOnly: true,
+		sameSite: 'lax',
+		secure: !dev,
+		maxAge: sessionCookie.maxAge ?? 60 * 60 * 24 * 7
+	});
+}
+
 /**
  * Logs in against the API, then mirrors the API's Set-Cookie into the admin
  * app's own cookie jar (see plan §1: BFF proxy) so the browser only ever
@@ -52,28 +81,7 @@ export async function login(event: MinimalEvent, email: string, password: string
 		throw await toApiError(response);
 	}
 
-	const setCookieHeaders =
-		typeof response.headers.getSetCookie === 'function'
-			? response.headers.getSetCookie()
-			: response.headers.get('set-cookie')
-				? [response.headers.get('set-cookie') as string]
-				: [];
-
-	const sessionCookie = setCookieHeaders
-		.map((header) => parseSetCookie(header, SESSION_COOKIE_NAME))
-		.find((parsed): parsed is { value: string; maxAge?: number } => parsed !== null);
-
-	if (!sessionCookie) {
-		throw new ApiError(500, 'Login berhasil tapi sesi tidak diterima dari server.');
-	}
-
-	event.cookies.set(SESSION_COOKIE_NAME, sessionCookie.value, {
-		path: '/',
-		httpOnly: true,
-		sameSite: 'lax',
-		secure: !dev,
-		maxAge: sessionCookie.maxAge ?? 60 * 60 * 24 * 7
-	});
+	mirrorSessionCookie(event, response);
 
 	const body = (await response.json()) as { user: AuthUser };
 	return body.user;

@@ -20,11 +20,15 @@ interface RawFetchOptions {
 	body?: unknown;
 	fetch: typeof fetch;
 	cookie?: string;
+	headers?: Record<string, string>;
 }
 
 /** Low-level call that returns the raw Response — needed by auth.ts to read Set-Cookie on login. */
-export async function rawApiFetch(path: string, { method = 'GET', body, fetch, cookie }: RawFetchOptions): Promise<Response> {
-	const headers: Record<string, string> = {};
+export async function rawApiFetch(
+	path: string,
+	{ method = 'GET', body, fetch, cookie, headers: customHeaders = {} }: RawFetchOptions
+): Promise<Response> {
+	const headers: Record<string, string> = { ...customHeaders };
 	if (body !== undefined) headers['Content-Type'] = 'application/json';
 	if (cookie) headers['Cookie'] = cookie;
 
