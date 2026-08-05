@@ -1,0 +1,145 @@
+/**
+ * DTOs hand-maintained against the real `unej-cms` backend (`d:\nest-js\unej-cms`) —
+ * there is no OpenAPI/Swagger spec (PRD gap #5), so these were verified directly
+ * against the NestJS controllers/Zod DTOs/Drizzle schema rather than guessed from
+ * PRD prose alone. Keep this in sync if the backend DTOs change.
+ */
+
+export type SiteRole = 'site_admin' | 'editor' | 'reviewer' | 'author';
+
+export const SITE_ROLES: SiteRole[] = ['site_admin', 'editor', 'reviewer', 'author'];
+
+export type ContentStatus =
+	| 'draft'
+	| 'in_review'
+	| 'approved'
+	| 'scheduled'
+	| 'published'
+	| 'archived'
+	| 'trashed';
+
+/** Statuses a user may pick manually from the status dropdown (PRD §9.6) — `published` is set only via the Publish action. */
+export const MANUAL_CONTENT_STATUSES: ContentStatus[] = [
+	'draft',
+	'in_review',
+	'approved',
+	'scheduled',
+	'archived',
+	'trashed'
+];
+
+/**
+ * Backend accepts any status via generic PATCH (no state-machine validation), so the
+ * UI is responsible for only offering sensible next steps (PRD §9.6). `published` is
+ * never offered here — it's only reachable via the dedicated Publish action.
+ */
+const STATUS_TRANSITIONS: Record<ContentStatus, ContentStatus[]> = {
+	draft: ['draft', 'in_review', 'archived', 'trashed'],
+	in_review: ['in_review', 'approved', 'draft', 'archived', 'trashed'],
+	approved: ['approved', 'scheduled', 'draft', 'archived', 'trashed'],
+	scheduled: ['scheduled', 'approved', 'archived', 'trashed'],
+	published: ['published', 'archived', 'trashed'],
+	archived: ['archived', 'draft', 'trashed'],
+	trashed: ['trashed', 'draft']
+};
+
+export function allowedStatusTransitions(current: ContentStatus): ContentStatus[] {
+	return STATUS_TRANSITIONS[current] ?? MANUAL_CONTENT_STATUSES;
+}
+
+export interface User {
+	id: string;
+	email: string;
+	name: string;
+	isSuperAdmin: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+/**
+ * `GET /auth/me` and `POST /auth/login` both respond `{ user: AuthUser }`.
+ * Confirmed against `AuthenticatedUser` in auth.service.ts — it is exactly `User`,
+ * with NO per-site role info. There is no endpoint anywhere that exposes which
+ * role (site_admin/editor/reviewer/author) the current user holds on a given site,
+ * so the UI cannot distinguish role tiers client-side — only membership (via
+ * `GET /sites`, which the backend already filters to accessible sites) is knowable.
+ * See `isSiteMember` in `$lib/permissions.ts`.
+ */
+export type AuthUser = User;
+
+export interface Site {
+	id: string;
+	slug: string;
+	name: string;
+	domain: string | null;
+	logoUrl: string | null;
+	faviconUrl: string | null;
+	createdAt: string;
+	updatedAt: string;
+}
+
+/**
+ * `POST /sites/:id/members` body: `{ userId, roleSlug }` (NOT `role` — confirmed
+ * against assign-member.dto.ts). There is no `GET /sites/:id/members` — the backend
+ * genuinely has no endpoint to list a site's current members (confirmed: only
+ * add/remove exist on SitesController). This is a real gap beyond PRD §13's
+ * documented list; see the members page for how the UI degrades honestly.
+ */
+export interface AddSiteMemberInput {
+	userId: string;
+	roleSlug: SiteRole;
+}
+
+export interface NewsItem {
+	id: string;
+	siteId: string;
+	title: string;
+	slug: string;
+	excerpt: string | null;
+	bodyMarkdown: string;
+	featuredImageUrl: string | null;
+	status: ContentStatus;
+	authorId: string;
+	authorName?: string;
+	createdAt: string;
+	updatedAt: string;
+	publishedAt?: string | null;
+}
+
+export interface PageItem {
+	id: string;
+	siteId: string;
+	title: string;
+	slug: string;
+	bodyMarkdown: string;
+	parentId: string | null;
+	isHomepage: boolean;
+	order: number;
+	status: ContentStatus;
+	authorId: string;
+	authorName?: string;
+	createdAt: string;
+	updatedAt: string;
+	publishedAt?: string | null;
+}
+
+export interface SessionInfo {
+	id: string;
+	userAgent: string | null;
+	ip: string | null;
+	createdAt: string;
+	expiresAt: string;
+}
+
+/** 400 Zod validation error shape (PRD §11). */
+export interface ApiFieldError {
+	path: string;
+	message: string;
+}
+
+/** 401/403 error shape (PRD §11). */
+export interface ApiErrorBody {
+	message: string;
+	error: string;
+	statusCode: number;
+}
