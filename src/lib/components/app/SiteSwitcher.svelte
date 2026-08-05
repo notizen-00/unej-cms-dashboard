@@ -21,7 +21,7 @@
 		{#snippet child({ props })}
 			<button
 				type="button"
-				class="flex h-9 w-[164px] items-center gap-2 border border-[#dce3ec] bg-[#fbfcff] px-3 text-left text-[11px] text-[#64748b] transition-colors hover:border-[#94a3b8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]/30 sm:w-[200px]"
+				class="flex h-9 w-41 items-center gap-2 border border-[#dce3ec] bg-[#fbfcff] px-3 text-left text-[11px] text-[#64748b] transition-colors hover:border-[#94a3b8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38bdf8]/30 sm:w-50"
 				{...props}
 			>
 				<Search
@@ -39,7 +39,7 @@
 		{/snippet}
 	</DropdownMenu.Trigger>
 
-	<DropdownMenu.Content class="w-[240px]">
+	<DropdownMenu.Content class="w-60">
 		<DropdownMenu.Group>
 			<DropdownMenu.Label>Pilih situs</DropdownMenu.Label>
 

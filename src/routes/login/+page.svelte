@@ -185,7 +185,7 @@
 				<input
 					type="checkbox"
 					bind:checked={rememberMe}
-					class="h-3.5 w-3.5 cursor-pointer rounded-[2px] border-[#cbd5e1] accent-[#075985]"
+					class="h-3.5 w-3.5 cursor-pointer rounded-xs border-[#cbd5e1] accent-[#075985]"
 				/>
 
 				<span>Ingat saya</span>

@@ -49,7 +49,7 @@
 		<main
 			class="min-h-0 flex-1 overflow-y-auto bg-[#f8f7ff] px-4 py-5 sm:px-6 sm:py-6 xl:px-8"
 		>
-			<div class="mx-auto w-full max-w-[1500px]">
+			<div class="mx-auto w-full max-w-375">
 				{@render children()}
 			</div>
 		</main>

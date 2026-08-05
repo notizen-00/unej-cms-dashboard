@@ -77,14 +77,14 @@
 
 <aside
 	class={cn(
-		'fixed inset-y-0 left-0 z-50 flex w-[224px] shrink-0 flex-col border-r border-[#e1e7ef] bg-white shadow-xl transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 lg:shadow-none',
+		'fixed inset-y-0 left-0 z-50 flex w-56 shrink-0 flex-col border-r border-[#e1e7ef] bg-white shadow-xl transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 lg:shadow-none',
 		mobileOpen ? 'translate-x-0' : '-translate-x-full'
 	)}
 >
 	<header class="flex h-16 shrink-0 items-center border-b border-[#e5eaf1] px-4">
 		<a href="/" class="flex min-w-0 items-center gap-2.5" onclick={onClose}>
 			<div
-				class="grid h-9 w-9 shrink-0 place-items-center rounded-[2px] bg-[#075985] text-sm font-bold text-white"
+				class="grid h-9 w-9 shrink-0 place-items-center rounded-xs bg-[#075985] text-sm font-bold text-white"
 			>
 				U
 			</div>
@@ -116,20 +116,20 @@
 		{#if activeSite}
 			{@render navLink(
 				`/sites/${activeSite.id}/news`,
-				'Konten Berita',
+				'Post',
 				Newspaper
 			)}
 
 			{@render navLink(
 				`/sites/${activeSite.id}/pages`,
-				'Halaman Statis',
+				'Pages',
 				FileText
 			)}
 		{/if}
 
 		{#if user.isSuperAdmin}
-			{@render navLink('/sites', 'Kelola Situs', Globe2, true)}
-			{@render navLink('/users', 'Pengguna', Users)}
+			{@render navLink('/sites', 'Site', Globe2, true)}
+			{@render navLink('/users', 'Users', Users)}
 		{/if}
 	</nav>
 
